@@ -42,6 +42,7 @@ int QuotientFilter::insert(int data) {
   int q_int = getqr(f, true);
   int r_int = getqr(f, false);
   size_t bucket = q_int % numBucks;
+  stat_arr[bucket*3] = true;
 
   // If bucket empty, place.
   if(!isFilled(bucket)) {
@@ -68,8 +69,7 @@ int QuotientFilter::insert(int data) {
   bool run_over = false;
   size_t started = run_start;
 
-  // after scans, make sure to set connonical bit:
-  stat_arr[bucket*3] = true;
+  // After scans, make sure to set connonical bit:
 
   // Loop while still looking at non-empty spots
   while(isFilled(run_start) == true) {
@@ -102,7 +102,8 @@ int QuotientFilter::insert(int data) {
     // To catch infinite loops on saturation...
     if(run_start == started)
         return -1;
-    run_over = !stat_arr[(run_start*3) + 1]; // If cont false, run is over and we need to insert
+    if(!run_over)
+        run_over = !stat_arr[(run_start*3) + 1]; // If cont false, run is over and we need to insert
   }
 
   // Insert
@@ -133,8 +134,10 @@ bool QuotientFilter::contains(int data) const {
   size_t bucket = q_int % numBucks;
  
   // If connonical slot empty, return false
-  if(stat_arr[bucket*3] == false)
+  if(stat_arr[bucket*3] == false){
+  //    std::cout<<"Connonical slot empty"<<std::endl;
       return false;
+  }
   
   // Now let's scan through run
   std::vector<size_t> cluster_info = scan_left(bucket);
@@ -147,6 +150,8 @@ bool QuotientFilter::contains(int data) const {
 
   // Scan right now
   size_t run_start = scan_right(cluster_start, runs_before);
+  //run_start =cluster_start;
+  size_t started = run_start;
 
   // Loop while still looking at non-empty spots
   while(isFilled(run_start) == true) {
@@ -154,12 +159,14 @@ bool QuotientFilter::contains(int data) const {
     if(buckets[run_start] == r_int)
       return true;
     // Because we are in sorted order, stop early if greater
-    if(buckets[run_start] > r_int)
-      return false;
+    //if(buckets[run_start] > r_int)
+    //  return false;
     run_start = increment(numBucks, run_start);
 
     // If our run is over, return false
     if(stat_arr[(run_start*3) + 1] != true)
+        return false;
+    if(started == run_start)
         return false;
   }
   return false;
