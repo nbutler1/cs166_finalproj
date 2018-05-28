@@ -6,12 +6,12 @@
 #include <stdlib.h>
 #include <iostream>
 
-CuckooFilter::CuckooFilter(size_t numBuckets, size_t arr_size, std::shared_ptr<HashFamily> finger, std::shared_ptr<HashFamily> family) {
-  
+CuckooFilter::CuckooFilter(size_t arr_size, std::shared_ptr<HashFamily> family) {
+  size_t numBuckets = 4; 
   // First set variables  
-  numBucks = numBuckets;
+  numBucks = arr_size;
   h1 = family->get();
-  finger_pointer = finger->get();
+  finger_pointer = family->get();
   num_max_cuckoos = 500;
   num_elems = 0;
 
@@ -60,7 +60,7 @@ int CuckooFilter::insert(int data) {
   int f = finger_pointer(data);
   int ind1 = h1(data) % numBucks;
   int ind2 = (ind1 ^ f) % numBucks;
-  std::cout<<"Ind 1: "<<ind1<<" Ind 2: "<<ind2<<std::endl;
+  //std::cout<<"Ind 1: "<<ind1<<" Ind 2: "<<ind2<<std::endl;
   if(b1[ind1]->has(f) || b2[ind2]->has(f))
     return 1;
   if(!b1[ind1]->full()){

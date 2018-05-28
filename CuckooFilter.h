@@ -31,7 +31,7 @@ class CuckooFilter {
    *
    * and assigning 'family' to it.
    */
-   CuckooFilter(size_t numBuckets, size_t arr_size, std::shared_ptr<HashFamily> finger, std::shared_ptr<HashFamily> family);
+   CuckooFilter(size_t arr_size, std::shared_ptr<HashFamily> family);
   
   /**
    * Cleans up all memory allocated by this hash table.

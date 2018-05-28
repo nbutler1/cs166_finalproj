@@ -3,6 +3,7 @@
 #include "Hashes.h"
 #include "CuckooFilter.h"
 #include "Timing.h"
+#include "QuotientFilter.h"
 
 int main() {
   /* A list of all true families of hash functions (that is, hash families
@@ -30,6 +31,7 @@ int main() {
   };*/
 
   std::cout << "Correctness Tests" << std::endl;
+  std::cout << "  Quotient:       " << (checkCorrectness<QuotientFilter>(allHashFamilies) ? "Pass" : "fail") << std::endl;
   std::cout << "  Cuckoo:         " << (checkCorrectness<CuckooFilter>(allHashFamilies) ? "pass" : "fail") << std::endl;
   std::cout << std::endl;
 
