@@ -41,7 +41,7 @@ public:
    * that was stored here has since been removed.
    */
   void remove(int key);
-  
+  bool linscan(int data) const;  
   size_t decrement(size_t bucket) const;
   std::vector<size_t> scan_left(size_t ind) const;
   bool isFilled(size_t ind) const;
