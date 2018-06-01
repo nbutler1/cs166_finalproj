@@ -8,23 +8,24 @@ QuotientFilter::QuotientFilter(size_t numBuckets,
                                , numBucks(numBuckets)
                                , r(16)
                                , q(16)
-                               , stat_arr(3*numBuckets, false) {
+                               , stat_arr(3*numBuckets, false){
   fp = family->get(); // initialize hash function
+  std::cout << "[DEBUG] Number of buckets: " << numBuckets << std::endl;
 }
 
-QuotientFilter::~QuotientFilter() {
+QuotientFilter::~QuotientFilter(){
   // TODO implement this
 }
 
 /**
  * Helper function that retrieves quotient or remainder.
  */
-int QuotientFilter::getqr(int f, bool is_q) const {
+int QuotientFilter::getqr(int f, bool is_q) const{
   int result, mask = 0xffffffff;
   if(is_q){
     mask = mask << r;
-  }else {
-    mask = mask >> (sizeof(int) - r);
+  }else{
+    mask = mask >> (8*sizeof(int) - r);
   }
   result = mask & f;
   if(is_q){
@@ -33,7 +34,8 @@ int QuotientFilter::getqr(int f, bool is_q) const {
   return result;
 }
 
-int QuotientFilter::insert(int data) {
+// TODO: WHAT DOES THE RETURN VALUE MEAN???
+int QuotientFilter::insert(int data){
   /* Pseudo Code: 
    *    Scratch that, do what contains 
    *    explains and shift everything
@@ -44,22 +46,27 @@ int QuotientFilter::insert(int data) {
   int f = fp(data); // hash
   int q_int = getqr(f, true);
   int r_int = getqr(f, false);
+  if(q_int >= (int)numBucks)
+    printf("[DEBUG] The quotient %d is larger than the number of buckets %zu.\n", q_int, numBucks); 
   size_t bucket = q_int % numBucks;
   stat_arr[bucket*3] = true;
 
-  // If bucket empty, place.
-  if(!isFilled(bucket)) {
+  // If bucket empty, place the remainder into it.
+  if(!isFilled(bucket)){
     buckets[bucket] = r_int;
     set_3_bit(bucket, true, false, false);
     return 1;
   }
 
-  // Now let's scan through run
+  // Since the bucket is filled, there are two possible cases: one is that the
+  // current element in the bucket has the same remainder as the current one,
+  // but it's possible that it's different. Let's scan through this cluster.
+
+  // TODO: I THINK YOU ONLY NEED TO SCAN LEFT IF THE REMAINDER BELONGS IN THIS RUN
   std::vector<size_t> cluster_info = scan_left(bucket);
   size_t cluster_start = cluster_info[0]; // Start of the cluster
-  size_t runs_before = cluster_info[1];   // Number of runs before the one we want
+  size_t runs_before = cluster_info[1]; // Number of runs before the one we want
   bool first_in_run = stat_arr[bucket*3]; // If our run already exists..
-
 
   // If cluster_start is > numBucks, then saturated and done inserting...
   if(cluster_start > numBucks)
@@ -116,10 +123,7 @@ int QuotientFilter::insert(int data) {
   return 1;
 }
 
-
-
-
-bool QuotientFilter::contains(int data) const {
+bool QuotientFilter::contains(int data) const{
   /* Pseudo Code:
    *    - Start at canonical slot.  If empty, false.
    *     If not, scan left until hit an is occupied is 
@@ -175,7 +179,7 @@ bool QuotientFilter::contains(int data) const {
   return false;
 }
 
-void QuotientFilter::remove(int data) {
+void QuotientFilter::remove(int data){
    // TODO implement this
     /* Pseudo Code:
    *    - do same search as contains
@@ -211,9 +215,8 @@ size_t QuotientFilter::scan_right(size_t ind, size_t runs) const{
 }
 
 std::vector<size_t> QuotientFilter::scan_left(size_t ind) const{
-  /* This function scans the buckets array
-   * left to find the beginning of the cluster
-   * the index belongs to.
+  /* This function scans the buckets array left to find the beginning of the
+   * cluster the index belongs to.
    */
   size_t cluster_start = ind;
   size_t runs = 0;
@@ -222,20 +225,30 @@ std::vector<size_t> QuotientFilter::scan_left(size_t ind) const{
       if(stat_arr[(cluster_start *3)] == true)
           runs += 1;
       cluster_start = decrement(cluster_start);
-      if(cluster_start == ind) {
-        return {numBucks + 1, runs};
-      }
+      if(cluster_start == ind)
+        return {numBucks+1, runs};
   }
-  return {cluster_start + 1, runs};
+  return {cluster_start+1, runs};
 }
 
-bool QuotientFilter::isFilled(size_t ind) const{
-  /* This funciton returns whether or not a given
-   * index is filled (true) or empty (false)
+bool QuotientFilter::isFilled(size_t bkt) const{
+  /* This funciton returns whether or not a given bucket indexed by bkt is
+   * filled (true) or empty (false).
    */
-  return stat_arr[ind*3] || stat_arr[(ind * 3) +1] || stat_arr[(ind*3) +2];
+  return isOccupied(bkt) || isContinuation(bkt) || isShifted(bkt);
 }
 
+bool QuotientFilter::isOccupied(size_t bkt) const{
+  return stat_arr[bkt*3];
+}
+
+bool QuotientFilter::isContinuation(size_t bkt) const{
+  return stat_arr[bkt*3+1];
+}
+
+bool QuotientFilter::isShifted(size_t bkt) const{
+  return stat_arr[bkt*3+2];
+}
 
 size_t QuotientFilter::decrement(size_t bucket) const{
   /* This function takes in a bucket index and
@@ -247,22 +260,19 @@ size_t QuotientFilter::decrement(size_t bucket) const{
   return bucket - 1;
 }
 
-void QuotientFilter::set_3_bit(size_t ind, bool occ,
-                        bool cont, bool shift) {
-  /* This function takes in an index into the 
-   * buckets array and sets the corresponding
-   * 3 bit bucket state with the 3 bool values
-   * provided.  Occ is occupied, cont is continuation,
-   * and shfit is shifted.
+void QuotientFilter::set_3_bit(size_t ind, bool occ, bool cont, bool shift){
+  /* This function takes in an index into the buckets array and sets the
+   * corresponding 3 bit bucket state with the 3 bool values provided. Occ
+   * corresponds to the is occupied bit, cont is the continuation bit, and
+   * shift is the shifted bit.
    */
-
-  stat_arr[ind * 3] = occ;
-  stat_arr[(ind * 3) + 1] = cont;
-  stat_arr[(ind * 3) + 2] = shift;
+  stat_arr[ind*3] = occ;
+  stat_arr[ind*3 + 1] = cont;
+  stat_arr[ind*3 + 2] = shift;
 }
 
 
-size_t QuotientFilter::increment(size_t numBucks, size_t bucket) const {
+size_t QuotientFilter::increment(size_t numBucks, size_t bucket) const{
   if(bucket >= numBucks - 1)
     return 0;
   return bucket + 1;
