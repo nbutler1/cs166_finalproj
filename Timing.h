@@ -125,13 +125,13 @@ bool checkCorrectness(size_t buckets, std::shared_ptr<HashFamily> family, size_t
   auto gen = std::uniform_int_distribution<int>(0, INT_MAX);//numActions * kSpread);
   HT table(buckets, family);
   std::unordered_set<int> reference;
-  std::cout<<"FUCKING HERE"<<std::endl;
   
   double total = 0;
   double true_negs = 0;
   double false_pos = 0;
   std::cout<<"Num Buckets: "<<buckets<<std::endl;
   while(true) {
+    //std::cout<<"ELEM: "<<total + 1<<"-------------------------"<<std::endl;
     //if((int)total % 10000 == 0)
     //  std::cout<<"Iter Num: "<<total<<std::endl;
     int value = gen(engine);
@@ -146,9 +146,12 @@ bool checkCorrectness(size_t buckets, std::shared_ptr<HashFamily> family, size_t
     }
     reference.insert(value);
     //std::cout<<"CHECKING"<<std::endl;
+    table.linscan(value);
     if ((reference.count(value) > 0) && !table.contains(value)) {
       true_negs += 1;
-      //std::cout<<"True Neg.  Value: "<<table.contains(value)<<std::endl;
+      //std::cout<<"True Neg.  Value: "<<value<<std::endl;
+      //if(table.linscan(value))
+      //    std::cout<<"CONFIRMED IT IS IN THERE"<<std::endl;
     }
 //    value = gen(engine);
     if((reference.count(value) <= 0) && table.contains(value)) {
@@ -160,6 +163,7 @@ bool checkCorrectness(size_t buckets, std::shared_ptr<HashFamily> family, size_t
   std::cout<<"Filter had "<<false_pos<<" false positive and "<<true_negs<<" true negatives."<<std::endl;
   std::cout<<"False Positive Rate: "<<(false_pos/ total)<<std::endl;
   std::cout<<"True Negative  Rate: "<<(true_negs/ total)<<std::endl;
+  //exit(0);
   return true;
 }
 

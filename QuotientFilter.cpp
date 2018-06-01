@@ -46,10 +46,12 @@ int QuotientFilter::insert(int data) {
   int q_int = getqr(f, true);
   int r_int = getqr(f, false);
   size_t bucket = q_int % numBucks;
+  //std::cout<<"BUCKET VALUE: "<<bucket<<std::endl;
 
   // If bucket empty, place.
   if(!isFilled(bucket)) {
-    std::cout<<"No Eviction"<<std::endl;
+    //std::cout<<"No Eviction"<<std::endl;
+    //std::cout<<"INSERTING INTO: "<<bucket<<std::endl;
     buckets[bucket] = r_int;
     set_3_bit(bucket, true, false, false);
     return 1;
@@ -59,9 +61,12 @@ int QuotientFilter::insert(int data) {
   std::vector<size_t> cluster_info = scan_left(bucket);
   size_t cluster_start = cluster_info[0]; // Start of the cluster
   size_t runs_before = cluster_info[1];   // Number of runs before the one we want
-  bool first_in_run = stat_arr[bucket*3]; // If our run already exists..
-
-
+  bool first_in_run = !stat_arr[bucket*3]; // If our run already exists..
+  /**std::cout<<"AFTER SCAN LEFT: "<<std::endl;
+  std::cout<<"CLUSTER START: "<<cluster_start<<std::endl;
+  std::cout<<"RUNS BEFORE: "<<runs_before<<std::endl;
+  std::cout<<"BUCKET: "<<bucket<<std::endl;
+  */
   // If cluster_start is > numBucks, then saturated and done inserting...
   if(cluster_start > numBucks)
     return -1;
@@ -75,7 +80,9 @@ int QuotientFilter::insert(int data) {
 
   // After scans, make sure to set connonical bit:
   stat_arr[bucket*3] = true;
-
+  //std::cout<<"RUN START: "<<run_start<<std::endl;
+  //if(stat_arr[(run_start * 3) + 1])
+  //    std::cout<<"IS CONTINUATION"<<std::endl;
   // Loop while still looking at non-empty spots
   while(isFilled(run_start) == true) {
     // If we hit value, return right away
@@ -87,8 +94,12 @@ int QuotientFilter::insert(int data) {
       buckets[run_start] = r_int;
       bool temp_cont = stat_arr[(run_start * 3) + 1];
       if(!inserted){
-        std::cout<<"INSERTING INTO: "<<run_start<<std::endl;
-        std::cout<<"BUCKET VAL: "<<bucket<<std::endl;
+        //std::cout<<"...."<<std::endl;
+        //std::cout<<"INSERTING INTO: "<<run_start<<std::endl;
+        //std::cout<<"CLUSTER START: "<<cluster_start<<std::endl;
+        //std::cout<<"BUCKET VAL: "<<bucket<<std::endl;
+        //std::cout<<"RUNS BEFORE: "<<runs_before<<std::endl;
+        //std::cout<<"...."<<std::endl;
         if(first_in_run) {
           stat_arr[(run_start*3) + 1] = false; // set cont to false
           stat_arr[(run_start*3) + 2] = (bucket != run_start);  // Set shifted if shifted
@@ -112,7 +123,11 @@ int QuotientFilter::insert(int data) {
     if(!run_over)
         run_over = !stat_arr[(run_start*3) + 1]; // If cont false, run is over and we need to insert
   }
-
+  
+  //if(!inserted) {
+  //  std::cout<<"INSERTING INTO: "<<run_start<<std::endl;
+  //}
+  
   // Insert
   buckets[run_start] = r_int;
   stat_arr[(run_start*3) + 1] = last_cont;
@@ -131,7 +146,7 @@ bool QuotientFilter::contains(int data) const {
 
   // If connonical slot empty, return false
   if(stat_arr[bucket*3] == false){
-      std::cout<<"Connonical slot empty"<<std::endl;
+      //std::cout<<"Connonical slot empty"<<std::endl;
       return false;
   }
 
@@ -142,17 +157,27 @@ bool QuotientFilter::contains(int data) const {
     std::vector<size_t> cluster_info = scan_left(bucket);
     size_t cluster_start = cluster_info[0];
     size_t runs_before = cluster_info[1];
+    
+    // Subtract one off of runs before to account for own run
+    runs_before -= 1;
 
     // If cluster_start is > numBucks, then saturated...
-    if(cluster_start > numBucks)
-        return false;
-    std::cout<<"Cluster Start: "<<cluster_start<<std::endl;
+    if(cluster_start > numBucks){
+        //std::cout<<"We are saturated..."<<std::endl;
+        return linscan(data);
+    }
+        //std::cout<<"Cluster Start: "<<cluster_start<<std::endl;
     // Scan right now
     run_start = scan_right(cluster_start, runs_before);
     //run_start =cluster_start;
     started = run_start;
+    //std::cout<<"AFTER SCAN LEFT IN CONTAINS: "<<std::endl;
+    //std::cout<<"CLUSTER START: "<<cluster_start<<std::endl;
+    //std::cout<<"RUNS BEFORE: "<<runs_before<<std::endl;
+    //std::cout<<"BUCKET: "<<bucket<<std::endl;
+    //std::cout<<"RUN START: "<<run_start<<std::endl;
   }
-  std::cout<<"RUN START: "<<run_start<<std::endl;  
+  //std::cout<<"RUN START: "<<run_start<<std::endl;  
   // Loop while still looking at non-empty spots
   while(isFilled(run_start) == true) {
     // If we hit value, true!!
@@ -177,13 +202,31 @@ bool QuotientFilter::linscan(int data) const{
   int f = fp(data);
   //int q_int = getqr(f, true);
   int r_int = getqr(f, false);
+  bool ret = false;
   for(int i = 0; i < numBucks; i++) {
     if(buckets[i] == r_int){
-        std::cout<<"Lin scan ind: "<<i<<std::endl;
-        return true;
+        //std::cout<<"Lin scan ind: "<<i<<std::endl;
+        ret = true;
     }
+    //if(!isFilled(i)){
+    //    std::cout<<"INDEX NOT FILLED: "<<i<<std::endl;
+    //}
   }
-  return false;
+/*
+  for(int j = 0; j < numBucks; j++) {
+    std::string out  = "";
+    out.resize(7);
+    for(int k = 0; k < 3; k++){
+      if(stat_arr[(j*3) + k] == false){
+        out.push_back('0');
+      }else{
+        out.push_back('1');
+      }
+      out.push_back(' ');
+    }
+    std::cout<<"Index "<<j<<": ["<<out<<"]"<<std::endl;
+  }*/
+  return ret;
 }
 
 void QuotientFilter::remove(int data) {
@@ -217,6 +260,11 @@ size_t QuotientFilter::scan_right(size_t ind, size_t runs) const{
       ind = increment(numBucks, ind);
     }
   }
+  ind = increment(numBucks, ind);
+  while(stat_arr[(ind *3) + 1] != false)
+      ind = increment(numBucks, ind);
+
+  // Now increment to end of the run
   return ind;
 }
 
@@ -240,7 +288,7 @@ std::vector<size_t> QuotientFilter::scan_left(size_t ind) const{
   cluster_start = increment(numBucks, cluster_start);
 
   // Subtract one off of runs to account for your own run
-  return {cluster_start, runs - 1};
+  return {cluster_start, runs};
 }
 
 bool QuotientFilter::isFilled(size_t ind) const{
