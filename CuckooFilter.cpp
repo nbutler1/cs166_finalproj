@@ -41,7 +41,7 @@ int CuckooFilter::run_cuckoo_loop(int f, int ind1, int ind2) {
   //std::cout<<"ENTERING CUCKOO LOOP"<<std::endl;
   for(size_t i = 0; i < num_max_cuckoos; i++) {
     //std::cout<<"CC Loop Iter num: "<<i<<std::endl;
-    if(counter % 2 == 0) {
+    if(counter % 2 != 0) {
         //std::cout<<"EVEN"<<std::endl;
         if(!b1[ind].full()){
             b1[ind].add(f);
@@ -53,6 +53,7 @@ int CuckooFilter::run_cuckoo_loop(int f, int ind1, int ind2) {
         //std::cout<<"ODD"<<std::endl;
         if(!b2[ind].full()){
             b2[ind].add(f);
+            //std::cout<<"EXITING"<<std::endl;
             return 1;
         }
         //std::cout<<"EVICTING"<<std::endl;
@@ -61,6 +62,7 @@ int CuckooFilter::run_cuckoo_loop(int f, int ind1, int ind2) {
     ind = (ind ^ h1(f)) % numBucks;
     counter += 1;
   }
+  //std::cout<<"EXITING"<<std::endl;
   return -1;
 }
 
