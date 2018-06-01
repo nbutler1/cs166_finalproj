@@ -3,6 +3,7 @@
 
 #include "Hashes.h"
 #include "Timer.h"
+#include <climits>
 #include <random>
 #include <tuple>
 #include <memory>
@@ -121,29 +122,35 @@ template <typename HT>
 bool checkCorrectness(size_t buckets, std::shared_ptr<HashFamily> family, size_t numActions) {
   std::default_random_engine engine;
   engine.seed(kRandomSeed);
-  auto gen = std::uniform_int_distribution<int>(0, numActions * kSpread);
+  auto gen = std::uniform_int_distribution<int>(0, INT_MAX);//numActions * kSpread);
   HT table(buckets, family);
   std::unordered_set<int> reference;
+  std::cout<<"FUCKING HERE"<<std::endl;
   
   double total = 0;
   double true_negs = 0;
   double false_pos = 0;
+  std::cout<<"Num Buckets: "<<buckets<<std::endl;
   while(true) {
-    //if((int)total % 100 == 0)
-    //std::cout<<"Iter Num: "<<total<<std::endl;
+    //if((int)total % 10000 == 0)
+    //  std::cout<<"Iter Num: "<<total<<std::endl;
     int value = gen(engine);
-    reference.insert(value);
+    //if(reference.count(value) > 0){
+     // std::cout<<"ALREADY SEEN"<<std::endl;
+     // return true;
+    //}
     //std::cout<<"INSERTING"<<std::endl;
     int val = table.insert(value);
     if(val == -1){
         break;
     }
+    reference.insert(value);
     //std::cout<<"CHECKING"<<std::endl;
     if ((reference.count(value) > 0) && !table.contains(value)) {
       true_negs += 1;
       //std::cout<<"True Neg.  Value: "<<table.contains(value)<<std::endl;
     }
-    value = gen(engine);
+//    value = gen(engine);
     if((reference.count(value) <= 0) && table.contains(value)) {
       false_pos += 1;
     }

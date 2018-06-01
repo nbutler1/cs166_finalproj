@@ -11,10 +11,10 @@ int main() {
    * families can be used in any hash table type.
    */
   auto allHashFamilies  = {
-    twoIndependentHashFamily(),
-    threeIndependentHashFamily(),
-    fiveIndependentHashFamily(),
-    tabulationHashFamily()
+    //twoIndependentHashFamily(),
+    //threeIndependentHashFamily(),
+    fiveIndependentHashFamily()
+    //tabulationHashFamily()
   };
   
   /* A list of all types of hash functions available, including families with
