@@ -3,30 +3,34 @@
 
 
 QuotientFilter::QuotientFilter(size_t numBuckets, 
-                               std::shared_ptr<HashFamily> family) {
-  fp = family->get();
-  std::vector<int> temp(numBuckets, 0);
-  buckets = temp; 
-  numBucks = numBuckets;
-  r = 16;
-  q = 16;
-  std::vector<bool> stat_temp(3*numBuckets, false);
-  stat_arr = stat_temp;
+                               std::shared_ptr<HashFamily> family)
+                               : buckets(numBuckets, 0)
+                               , numBucks(numBuckets)
+                               , r(16)
+                               , q(16)
+                               , stat_arr(3*numBuckets, false) {
+  fp = family->get(); // initialize hash function
 }
 
 QuotientFilter::~QuotientFilter() {
   // TODO implement this
 }
 
+/**
+ * Helper function that retrieves quotient or remainder.
+ */
 int QuotientFilter::getqr(int f, bool is_q) const {
-  // TODO: Implement this
-  int mask = 0xffffffff;
+  int result, mask = 0xffffffff;
   if(is_q){
-      mask = mask << r;
+    mask = mask << r;
   }else {
-      mask = mask >> (sizeof(int) - r);
+    mask = mask >> (sizeof(int) - r);
   }
-  return (f & mask);
+  result = mask & f;
+  if(is_q){
+    result = result >> r;
+  }
+  return result;
 }
 
 int QuotientFilter::insert(int data) {
@@ -37,8 +41,7 @@ int QuotientFilter::insert(int data) {
    *    robin hood hashing)
    * */
 
-
-  int f = fp(data);
+  int f = fp(data); // hash
   int q_int = getqr(f, true);
   int r_int = getqr(f, false);
   size_t bucket = q_int % numBucks;
@@ -69,7 +72,7 @@ int QuotientFilter::insert(int data) {
   bool run_over = false;
   size_t started = run_start;
 
-  // After scans, make sure to set connonical bit:
+  // After scans, make sure to set canonical bit:
 
   // Loop while still looking at non-empty spots
   while(isFilled(run_start) == true) {
@@ -118,7 +121,7 @@ int QuotientFilter::insert(int data) {
 
 bool QuotientFilter::contains(int data) const {
   /* Pseudo Code:
-   *    - Start at connonical slot.  If empty, false.
+   *    - Start at canonical slot.  If empty, false.
    *     If not, scan left until hit an is occupied is 
    *     false (beginning of cluster).  Count the runs
    *     along the way (ie occupied slots to the left).
@@ -133,9 +136,9 @@ bool QuotientFilter::contains(int data) const {
   int r_int = getqr(f, false);
   size_t bucket = q_int % numBucks;
  
-  // If connonical slot empty, return false
+  // If canonical slot empty, return false
   if(stat_arr[bucket*3] == false){
-  //    std::cout<<"Connonical slot empty"<<std::endl;
+  //    std::cout<<"canonical slot empty"<<std::endl;
       return false;
   }
   

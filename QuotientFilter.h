@@ -54,11 +54,11 @@ private:
    * lines.
    */
   // Array of buckets containing data
-  std::vector<int>  buckets;
+  std::vector<int> buckets;
   size_t numBucks;
   HashFunction fp;
-  int r;
-  int q;
+  int r; // remainder
+  int q; // quotient
   std::vector<bool> stat_arr; // Use Bool array cause it only stores one bit 
   // Only caviate with bitsets is all of them 
   QuotientFilter(QuotientFilter const &) = delete;
