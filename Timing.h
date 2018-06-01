@@ -146,7 +146,7 @@ bool checkCorrectness(size_t buckets, std::shared_ptr<HashFamily> family, size_t
     }
     reference.insert(value);
     //std::cout<<"CHECKING"<<std::endl;
-    table.linscan(value);
+    //table.linscan(value);
     if ((reference.count(value) > 0) && !table.contains(value)) {
       true_negs += 1;
       //std::cout<<"True Neg.  Value: "<<value<<std::endl;
