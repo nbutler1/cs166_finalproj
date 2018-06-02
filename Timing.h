@@ -131,29 +131,16 @@ bool checkCorrectness(size_t buckets, std::shared_ptr<HashFamily> family, size_t
   double false_pos = 0;
   std::cout<<"Num Buckets: "<<buckets<<std::endl;
   while(true) {
-    //std::cout<<"ELEM: "<<total + 1<<"-------------------------"<<std::endl;
-    //if((int)total % 10000 == 0)
-    //  std::cout<<"Iter Num: "<<total<<std::endl;
     int value = gen(engine);
-    //if(reference.count(value) > 0){
-     // std::cout<<"ALREADY SEEN"<<std::endl;
-     // return true;
-    //}
-    //std::cout<<"INSERTING"<<std::endl;
     int val = table.insert(value);
     if(val == -1){
         break;
     }
     reference.insert(value);
-    //std::cout<<"CHECKING"<<std::endl;
-    table.linscan(value);
     if ((reference.count(value) > 0) && !table.contains(value)) {
       true_negs += 1;
-      //std::cout<<"True Neg.  Value: "<<value<<std::endl;
-      //if(table.linscan(value))
-      //    std::cout<<"CONFIRMED IT IS IN THERE"<<std::endl;
     }
-//    value = gen(engine);
+    value = gen(engine);
     if((reference.count(value) <= 0) && table.contains(value)) {
       false_pos += 1;
     }

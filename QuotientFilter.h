@@ -16,6 +16,10 @@ public:
    */
   ~QuotientFilter();
  
+  /**
+   * Function given a fingerprint returns either the q
+   * or r value depending on the is_q value specified
+   */
   int getqr(int f, bool is_q) const;
 
   /**
@@ -24,7 +28,10 @@ public:
    */
   int insert(int data);
 
-
+  /**
+   * Function sets the three indicator bits for the given
+   * index to the given value.
+   */
   void set_3_bit(size_t ind, bool occ, bool cont, bool shift);
   
   /**
@@ -35,27 +42,46 @@ public:
   /**
    * Removes the specified element from the filter. If the element is not
    * present in the hash table, this operation is a no-op.
-   *
-   * You should implement this operation using tombstone deletion - replace the
-   * key to remove with a special "tombstone" value indicating that something
-   * that was stored here has since been removed.
    */
   void remove(int key);
-  bool linscan(int data) const;  
+  
+  /**
+   * Function perfroms a linear scan starting from the given bucket.
+   * The LinScan function is only used when the array is full.
+   */
+  bool linscan(int data, size_t bucket) const;  
+  
+  /**
+   * Function takes in a bucket index and
+   * decrements it, accounting for wrap around.
+   */
   size_t decrement(size_t bucket) const;
-  std::vector<size_t> scan_left(size_t ind) const;
+  
+  
+  /**
+   * Funciton returns whether or not a given
+   * index is filled (true) or empty (false)
+   */
   bool isFilled(size_t ind) const;
-  size_t scan_right(size_t ind, size_t runs) const;
+  
+  /**
+   * Function increments the given bucket according to the
+   * wrap around rule.
+   */
   size_t increment(size_t numBucks, size_t bucket) const;
+  
+  /**
+   * Function returns whether or not the given bucket
+   * is the beginning of a cluster.
+   */
   bool isClusterStart(size_t bucket) const;
+  
+  /**
+   * Finds the run for the given bucket.
+   */
   size_t find_run(size_t bucket) const;
 
 private:
-  /* Fun with C++: these next two lines disable implicitly-generated copy
-   * functions that would otherwise cause weird errors if you tried to
-   * implicitly copy an object of this type. You don't need to touch these
-   * lines.
-   */
   // Array of buckets containing data
   std::vector<int>  buckets;
   size_t numBucks;
