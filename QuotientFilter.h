@@ -48,6 +48,7 @@ public:
   size_t scan_right(size_t ind, size_t runs) const;
   size_t increment(size_t numBucks, size_t bucket) const;
   bool isClusterStart(size_t bucket) const;
+  size_t find_run(size_t bucket) const;
 
 private:
   /* Fun with C++: these next two lines disable implicitly-generated copy

@@ -62,7 +62,7 @@ int QuotientFilter::insert(int data) {
   size_t run_start = bucket;
   bool first_in_run = !stat_arr[bucket*3];
   
-  if(!isClusterStart(bucket)) { 
+  /*if(!isClusterStart(bucket)) { 
     // Now let's scan through run
     std::vector<size_t> cluster_info = scan_left(bucket);
     size_t cluster_start = cluster_info[0]; // Start of the cluster
@@ -78,7 +78,11 @@ int QuotientFilter::insert(int data) {
 
     // Scan right now
     run_start = scan_right(cluster_start, runs_before);
-  }
+  }*/
+  // After scans, make sure to set connonical bit:
+  stat_arr[bucket*3] = true;
+  run_start = find_run(bucket);
+  //std::cout<<"FOUND RUN"<<std::endl;
   bool inserted = false;
   bool last_cont = !first_in_run;
   bool run_over = false;
@@ -137,44 +141,6 @@ int QuotientFilter::insert(int data) {
         run_over = true;
   }
   
-  // Loop while still looking at non-empty spots
-  /*while(isFilled(run_start) == true) {
-    // If slot where r_int goes and have not inserted, evict
-    if((buckets[run_start] > r_int) || inserted || first_in_run || run_over){
-      int temp = buckets[run_start];
-      buckets[run_start] = r_int;
-      bool temp_cont = stat_arr[(run_start * 3) + 1];
-      if(!inserted){
-        if(isClusterStart(run_start) || first_in_run) {
-          std::cout<<"HERE"<<std::endl;
-          if(first_in_run || run_start == started){
-            stat_arr[(run_start*3) + 1] = false; // set cont to false
-          }else{
-            stat_arr[(run_start*3) + 1] = true;
-          }
-            
-          stat_arr[(run_start*3) + 2] = (bucket != run_start);  // Set shifted if shifted
-          temp_cont = !first_in_run;
-        }else {
-          stat_arr[(run_start*3) + 1] = temp_cont; // set cont to true
-          stat_arr[(run_start*3) + 2] = true; // set shifted to true
-        }
-        if(run_over)
-          temp_cont = false;
-        inserted = true;
-      }else {
-        stat_arr[(run_start*3) + 1] = last_cont;
-        stat_arr[(run_start*3) + 2] = true;
-      }
-      last_cont = temp_cont;
-      r_int = temp;
-    }
-    run_start = increment(numBucks, run_start);
-    // To catch infinite loops on saturation...
-    //if(run_start == started)
-    //    return -1;
-    */  
-//}
   // Insert
   buckets[run_start] = r_int;
   stat_arr[(run_start*3) + 1] = last_cont;
@@ -236,6 +202,7 @@ bool QuotientFilter::contains(int data) const {
   //std::cout<<"RUN START: "<<run_start<<std::endl;
   //std::cout<<"RUN START: "<<run_start<<std::endl;  
   // Loop while still looking at non-empty spots
+  run_start = find_run(bucket);
   while(isFilled(run_start) == true) {
     // If we hit value, true!!
     if(buckets[run_start] == r_int)
@@ -396,3 +363,24 @@ bool QuotientFilter::isClusterStart(size_t bucket) const {
   return (stat_arr[bucket*3] == true && stat_arr[(bucket*3) + 1] == false
           && stat_arr[(bucket*3) + 2] == false);
 }
+
+size_t QuotientFilter::find_run(size_t bucket) const{
+  size_t b = bucket;
+  while(stat_arr[(b*3) + 2] == true) {
+    b = decrement(b);
+  }
+  //std::cout<<"Cluster start: "<<b<<std::endl;
+  size_t s = b;
+  while(b != bucket) {
+    do {
+        s = increment(numBucks, s);
+    } while(stat_arr[(s*3) + 1] == true);
+
+    do {
+        b = increment(numBucks, b);
+    } while(!stat_arr[(b*3)]);
+
+  }
+  return s;
+}
+
