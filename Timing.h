@@ -146,7 +146,7 @@ bool checkCorrectness(size_t buckets, std::shared_ptr<HashFamily> family, size_t
     }
     reference.insert(value);
     //std::cout<<"CHECKING"<<std::endl;
-    //table.linscan(value);
+    table.linscan(value);
     if ((reference.count(value) > 0) && !table.contains(value)) {
       true_negs += 1;
       //std::cout<<"True Neg.  Value: "<<value<<std::endl;
@@ -163,7 +163,7 @@ bool checkCorrectness(size_t buckets, std::shared_ptr<HashFamily> family, size_t
   std::cout<<"Filter had "<<false_pos<<" false positive and "<<true_negs<<" true negatives."<<std::endl;
   std::cout<<"False Positive Rate: "<<(false_pos/ total)<<std::endl;
   std::cout<<"True Negative  Rate: "<<(true_negs/ total)<<std::endl;
-  //exit(0);
+  exit(0);
   return true;
 }
 
@@ -181,7 +181,7 @@ template <typename HT>
 bool checkCorrectness(std::initializer_list<std::shared_ptr<HashFamily>> families) {
   for (auto family: families) {
     if (!checkCorrectness<HT>({
-          std::make_tuple(12, family, 5),
+          std::make_tuple(25, family, 5),
             std::make_tuple(120, family, 50),
             std::make_tuple(12000, family, 5000)
             })) {

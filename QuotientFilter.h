@@ -47,6 +47,8 @@ public:
   bool isFilled(size_t ind) const;
   size_t scan_right(size_t ind, size_t runs) const;
   size_t increment(size_t numBucks, size_t bucket) const;
+  bool isClusterStart(size_t bucket) const;
+
 private:
   /* Fun with C++: these next two lines disable implicitly-generated copy
    * functions that would otherwise cause weird errors if you tried to
@@ -56,6 +58,7 @@ private:
   // Array of buckets containing data
   std::vector<int>  buckets;
   size_t numBucks;
+  size_t num_elems;
   HashFunction fp;
   int r;
   int q;
