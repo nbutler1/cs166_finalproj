@@ -83,7 +83,7 @@ public:
 
 private:
   // Array of buckets containing data
-  std::vector<int>  buckets;
+  std::vector<uint16_t>  buckets;
   size_t numBucks;
   size_t num_elems;
   HashFunction fp;

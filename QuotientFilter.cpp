@@ -3,10 +3,11 @@
 
 
 QuotientFilter::QuotientFilter(size_t numBuckets, 
-                               std::shared_ptr<HashFamily> family) {
+                               std::shared_ptr<HashFamily> family):
+                               buckets(numBuckets, 0){
   fp = family->get();
-  std::vector<int> temp(numBuckets, 0);
-  buckets = temp; 
+  //std::vector<int> temp(numBuckets, 0);
+  //buckets = temp; 
   numBucks = numBuckets;
   r = 16;
   q = 16;
@@ -36,7 +37,7 @@ int QuotientFilter::getqr(int f, bool is_q) const {
 int QuotientFilter::insert(int data) {
   int f = fp(data);
   int q_int = getqr(f, true);
-  int r_int = getqr(f, false);
+  uint16_t r_int = getqr(f, false);
   size_t bucket = q_int % numBucks;
   
   // If full, cant insert.
@@ -64,7 +65,7 @@ int QuotientFilter::insert(int data) {
   
   while(isFilled(run_start) == true) {
     if(!inserted) {
-        int temp = buckets[run_start];
+        uint16_t temp = buckets[run_start];
         inserted = true;
         if(first_in_run) {
             stat_arr[(run_start*3) + 1] = false;
@@ -89,7 +90,7 @@ int QuotientFilter::insert(int data) {
         }
     } else {
         // save state
-        int temp = buckets[run_start];
+        uint16_t temp = buckets[run_start];
         bool temp_cont = stat_arr[(run_start*3) + 1];
         stat_arr[(run_start*3) + 1] = last_cont;
         stat_arr[(run_start*3) + 2] = true;
@@ -120,7 +121,7 @@ int QuotientFilter::insert(int data) {
 bool QuotientFilter::contains(int data) const {
   int f = fp(data);
   int q_int = getqr(f, true);
-  int r_int = getqr(f, false);
+  uint16_t r_int = getqr(f, false);
   size_t bucket = q_int % numBucks;
   size_t run_start = bucket;
   size_t started = bucket;
@@ -154,7 +155,7 @@ bool QuotientFilter::contains(int data) const {
 
 bool QuotientFilter::linscan(int data, size_t bucket) const{
   int f = fp(data);
-  int r_int = getqr(f, false);
+  uint16_t r_int = getqr(f, false);
   size_t spot = bucket;
   do{
     if(buckets[spot] == r_int)
