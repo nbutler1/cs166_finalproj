@@ -1,2 +1,3 @@
-# cs166_finalproj
-Quotient filter project cs166
+# CS 166 Final Project
+
+Implementing the Quotient Filter and comparing its performance to Bloom Filters in filtering unique k-mers.
