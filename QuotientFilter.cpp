@@ -217,21 +217,21 @@ bool QuotientFilter::isClusterStart(size_t bucket) const {
 }
 
 size_t QuotientFilter::find_run(size_t bucket) const{
-  size_t b = bucket;
-  while(stat_arr[(b*3) + 2] == true) {
-    b = decrement(b);
+  size_t temp_bucket = bucket;
+  while(stat_arr[(temp_bucket*3) + 2] == true) {
+    temp_bucket = decrement(temp_bucket);
   }
-  size_t s = b;
-  while(b != bucket) {
+  size_t start = temp_bucket;
+  while(temp_bucket != bucket) {
     do {
-        s = increment(numBucks, s);
-    } while(stat_arr[(s*3) + 1] == true);
+        start = increment(numBucks, start);
+    } while(stat_arr[(start*3) + 1] == true);
 
     do {
-        b = increment(numBucks, b);
-    } while(!stat_arr[(b*3)]);
+        temp_bucket = increment(numBucks, temp_bucket);
+    } while(!stat_arr[(temp_bucket*3)]);
 
   }
-  return s;
+  return start;
 }
 
